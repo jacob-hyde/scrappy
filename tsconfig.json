@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "strict": true,
+    "target": "ES2017",
+    "module": "commonjs",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "ignoreDeprecations": "5.0",
+    "suppressImplicitAnyIndexErrors": true,
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "skipLibCheck": true,
+    "paths": {
+        "@/*": [
+            "node_modules",
+            "src/@types"
+        ]
+    }
+    }
+}
