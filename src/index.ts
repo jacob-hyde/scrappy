@@ -1,7 +1,7 @@
 import Scrappy from "./Scrappy";
 
 async function main() {
-  const queue = Scrappy.createQueue("test");
+  const queue = Scrappy.createQueue("test", true);
   //generate 100 random jobs with differnt job names and data
   for (let i = 0; i < 5; i++) {
     const jobName = `job-${i}`;

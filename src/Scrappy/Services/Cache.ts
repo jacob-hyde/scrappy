@@ -85,6 +85,14 @@ export default class Cache {
     return cachedValue;
   }
 
+  public async get(key: string): Promise<any> {
+    return await this.cache(key);
+  }
+
+  public async delete(key: string): Promise<void> {
+    await this.client.del(key);
+  }
+
   public async appendCache(key: string, value: any): Promise<void> {
     if (!(await this.client.exists(key))) {
       await this.client.set(key, "{}");

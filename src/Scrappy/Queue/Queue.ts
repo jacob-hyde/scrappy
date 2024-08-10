@@ -1,8 +1,6 @@
 const path = require("path");
 const ProcessJob = require("./Processor");
-import { Queue as BQueue, Worker, Job } from "bullmq";
-import { default as IORedis } from "ioredis";
-import Scrappy from "..";
+import { Queue as BQueue, Worker, Job, QueueEvents } from "bullmq";
 import Config from "../Services/Config";
 
 type Connection = {
@@ -15,16 +13,15 @@ type BulkJobs = Array<{ name: string; data: any; opts?: Object }>;
 
 export default class Queue {
   public queue: BQueue;
-  private worker!: Worker;
-  private workers: number = 3;
-  private redisConnection: IORedis;
-  constructor(public name: string, private useProcessor: boolean = false, private config: Config) {
-    this.redisConnection = new IORedis(this.getConnection());
+  public workers: Map<string, Worker> = new Map();
+  private concurrency: number = 1;
+  constructor(public name: string, private config: Config) {
     this.queue = new BQueue(name, {
       prefix: "queue",
-      connection: this.redisConnection,
+      connection: this.getConnection(),
     });
-    this.createWorker();
+
+    // this.recreateWorkers();
   }
 
   public async addJob(jobName: string, data: any = {}): Promise<Job> {
@@ -45,34 +42,86 @@ export default class Queue {
     return Job.createBulk(this.queue, jobs);
   }
 
-  public process(): void {
-    if (this.worker.isRunning() && !this.worker.isPaused()) {
-      return;
-    } else if (this.worker.isPaused()) {
-      this.worker.resume();
+  public process(workerName?: string): void {
+    if (workerName) {
+      const worker = this.workers.get(workerName);
+      if (!worker) {
+        throw new Error(`Worker ${workerName} not found`);
+      }
+      this.runWorker(worker);
       return;
     }
-    this.worker.run();
+
+    for (const worker of this.workers.values()) {
+      this.runWorker(worker);
+    }
   }
 
-  private createWorker(): void {
+  public async recreateWorkers(): Promise<void> {
+    // const workers = await this.queue.getWorkers();
+    // console.log(workers);
+    // for (const worker of workers) {
+    //   this.workers.set(worker.name, worker);
+    // }
+  }
+
+  public createWorker(
+    name: string = this.queue.name,
+    isSandboxProcess: boolean = false
+  ): void {
     const workerOptions = {
       prefix: "queue",
       autorun: false,
-      concurrency: this.workers,
-      connection: this.redisConnection,
+      concurrency: this.concurrency,
+      connection: this.getConnection(),
     };
 
-    if (this.useProcessor) {
-      this.worker = new Worker(
-        this.queue.name,
+    let worker: Worker;
+    if (isSandboxProcess) {
+      worker = new Worker(
+        name,
         path.join(__dirname, "Processor.js"),
         workerOptions
       );
-      return;
+    } else {
+      worker = new Worker(name, ProcessJob, workerOptions);
     }
 
-    this.worker = new Worker(this.queue.name, ProcessJob, workerOptions);
+    worker.on("failed", (job, err) => {
+      console.log(`Job ${job!.id} failed with error ${err.message}`);
+    });
+
+    worker.on("error", (err) => {
+      console.log(`Worker error: ${err.message}`);
+    });
+
+    this.queue.on("error", (err) => {
+      console.log(`Queue error: ${err.message}`);
+    });
+
+    const queueEvents = new QueueEvents(this.queue.name, {
+      connection: this.getConnection(),
+    });
+
+    queueEvents.on("completed", (jobId) => {
+      console.log(`Job ${jobId} has completed`);
+    });
+
+    queueEvents.on("failed", (jobId, err) => {
+      console.log(`Job ${jobId} has failed with error ${err}`);
+    });
+
+    this.workers.set(name, worker);
+  }
+
+  private runWorker(worker: Worker): void {
+    if (worker.isRunning() && !worker.isPaused()) {
+      return;
+    } else if (worker.isPaused()) {
+      worker.resume();
+      return;
+    }
+    worker.run();
   }
 
   private getConnection(): Connection {
@@ -81,5 +130,26 @@ export default class Queue {
       port: parseInt(this.config.get("REDIS_PORT")!),
       maxRetriesPerRequest: null,
     };
+  }
+}
+
+function printStackTrace() {
+  try {
+    throw new Error("Stack trace generator");
+  } catch (e) {
+    if (e instanceof Error) {
+      const stack = e.stack || "";
+      const formattedStack = stack
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(
+          (line) => line && !line.includes("Error: Stack trace generator")
+        )
+        .join("\n");
+
+      console.log("Stack Trace:\n", formattedStack);
+    } else {
+      console.log("Unknown error type:", e);
+    }
   }
 }

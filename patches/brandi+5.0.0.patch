@@ -1,0 +1,84 @@
+diff --git a/node_modules/brandi/lib/brandi.js b/node_modules/brandi/lib/brandi.js
+index fa1de4d..558d937 100644
+--- a/node_modules/brandi/lib/brandi.js
++++ b/node_modules/brandi/lib/brandi.js
+@@ -84,13 +84,11 @@ var InstanceSingletonScopedBinding = class extends InstanceBinding {
+     super(impl);
+     this.impl = impl;
+     this.scope = Scope.Singleton;
+-    if (process.env.NODE_ENV !== "production") {
+-      this.clone = () => {
+-        const binding = new InstanceSingletonScopedBinding(this.impl);
+-        binding.cache = this.cache;
+-        return binding;
+-      };
+-    }
++    this.clone = () => {
++      const binding = new InstanceSingletonScopedBinding(this.impl);
++      binding.cache = this.cache;
++      return binding;
++    };
+   }
+ };
+ var InstanceTransientScopedBinding = class extends InstanceBinding {
+@@ -129,20 +127,18 @@ var _BindingsVault = class {
+   constructor() {
+     this.parent = null;
+     this.map = new Map();
+-    if (process.env.NODE_ENV !== "production") {
+-      this.copy = () => this.from((prev) => {
+-        const next = new Map();
+-        prev.forEach((binding, key) => {
+-          var _a, _b;
+-          if (binding instanceof _BindingsVault) {
+-            next.set(key, binding.copy());
+-          } else {
+-            next.set(key, (_b = (_a = binding.clone) == null ? void 0 : _a.call(binding)) != null ? _b : binding);
+-          }
+-        });
+-        return next;
++    this.copy = () => this.from((prev) => {
++      const next = new Map();
++      prev.forEach((binding, key) => {
++        var _a, _b;
++        if (binding instanceof _BindingsVault) {
++          next.set(key, binding.copy());
++        } else {
++          next.set(key, (_b = (_a = binding.clone) == null ? void 0 : _a.call(binding)) != null ? _b : binding);
++        }
+       });
+-    }
++      return next;
++    });
+   }
+   set(binding, token2, condition = _BindingsVault.notag) {
+     const current = this.map.get(token2.__s);
+@@ -322,18 +318,16 @@ var Container = class extends DependencyModule {
+   constructor() {
+     super();
+     this.snapshot = null;
+-    if (process.env.NODE_ENV !== "production") {
+-      this.capture = () => {
+-        this.snapshot = this.vault.copy();
+-      };
+-      this.restore = () => {
+-        if (this.snapshot) {
+-          this.vault = this.snapshot.copy();
+-        } else {
+-          console.error("Error: It looks like a trying to restore a non-captured container state. Did you forget to call 'capture()' method?");
+-        }
+-      };
+-    }
++    this.capture = () => {
++      this.snapshot = this.vault.copy();
++    };
++    this.restore = () => {
++      if (this.snapshot) {
++        this.vault = this.snapshot.copy();
++      } else {
++        console.error("Error: It looks like a trying to restore a non-captured container state. Did you forget to call 'capture()' method?");
++      }
++    };
+   }
+   extend(container) {
+     this.vault.parent = container === null ? null : container.vault;
