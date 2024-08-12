@@ -6,13 +6,13 @@ const puppeteer = require("puppeteer-extra");
 import { Browser, PuppeteerLaunchOptions, executablePath } from "puppeteer";
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const AdblockerPlugin = require("puppeteer-extra-plugin-adblocker");
-import IBrowser from "./Interfaces/IBrowser";
+import IBrowser from "./Interfaces/Browser";
 import Config from "../Services/Config";
 
 puppeteer.use(StealthPlugin());
 puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
 
-export default abstract class BaseBrowser implements IBrowser {
+export default abstract class BrowserBase implements IBrowser {
   protected abstract instance: Browser | typeof Cluster;
   protected headless: boolean = true;
 

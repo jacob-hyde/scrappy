@@ -1,10 +1,11 @@
 import { token, tag, Container, Tag, Token } from "brandi";
 import Config from "../Services/Config";
 import Logger from "../Services/Logger";
-import ILogger from "../Services/Interfaces/ILogger";
+import ILogger from "../Services/Interfaces/Logger";
 import ConsoleLogger from "../Services/Loggers/ConsoleLogger";
 import Cache from "../Services/Cache";
 import Browser from "../Browsers/Browser";
+import ProcessScrapers from "../Services/ProcessScrapers";
 
 const Tokens = {
   config: token<Config>("config"),
@@ -13,6 +14,7 @@ const Tokens = {
   logger: token<Logger>("logger"),
   cache: token<Cache>("cache"),
   browser: token<Browser>("browser"),
+  processScrapers: token<ProcessScrapers>("processScrapers"),
 };
 
 const Tags = {
@@ -78,6 +80,14 @@ const Classes: ClassesMap = new Map([
       class: Browser,
       singleton: false,
       tokens: [Tokens.config],
+    },
+  ],
+  [
+    "processScrapers",
+    {
+      class: ProcessScrapers,
+      singleton: true,
+      tokens: [Tokens.config, Tokens.logService, Tokens.cache],
     },
   ],
 ]);

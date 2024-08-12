@@ -9,13 +9,13 @@ class Scrappy {
   public initialized: boolean = false;
   private isDeserializing: boolean = false;
   private didDeserialize: boolean = false;
+  public options: any = {};
 
   private constructor() {
     this.container = new Container();
     bindRegistrators(this.container);
   }
 
-  // Instead of immediately creating an instance, this method will check if the instance exists
   public static getInstance(): Scrappy {
     if (!Scrappy.instance) {
       throw new Error(
@@ -25,7 +25,6 @@ class Scrappy {
     return Scrappy.instance;
   }
 
-  // New method to explicitly initialize the instance
   public static initialize(): Scrappy {
     if (!Scrappy.instance) {
       const instance = new Scrappy();
@@ -44,10 +43,12 @@ class Scrappy {
 
     Scrappy.instance.initialized = serializedData.initialized;
     Scrappy.instance.didDeserialize = true;
-    console.log(serializedData.queueNames);
+
     for (const queueName of serializedData.queueNames) {
       Scrappy.instance.createQueue(queueName);
     }
+
+    Scrappy.instance.options = serializedData.options;
 
     Scrappy.instance.isDeserializing = false;
     return Scrappy.instance;
@@ -79,9 +80,18 @@ class Scrappy {
     return this.queues.get(name) as Queue;
   }
 
+  public setOptions(options: any): void {
+    this.options = options;
+  }
+
+  public async run(): Promise<void> {
+    this.service("processScrapers").run();
+  }
+
   public serialize(): string {
     return JSON.stringify({
       initialized: this.initialized,
+      options: this.options,
       queueNames: Array.from(this.queues.values()).map((queue) => queue.name),
     });
   }

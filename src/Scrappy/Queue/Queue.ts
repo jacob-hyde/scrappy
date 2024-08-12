@@ -20,8 +20,6 @@ export default class Queue {
       prefix: "queue",
       connection: this.getConnection(),
     });
-
-    // this.recreateWorkers();
   }
 
   public async addJob(jobName: string, data: any = {}): Promise<Job> {
@@ -55,14 +53,6 @@ export default class Queue {
     for (const worker of this.workers.values()) {
       this.runWorker(worker);
     }
-  }
-
-  public async recreateWorkers(): Promise<void> {
-    // const workers = await this.queue.getWorkers();
-    // console.log(workers);
-    // for (const worker of workers) {
-    //   this.workers.set(worker.name, worker);
-    // }
   }
 
   public createWorker(

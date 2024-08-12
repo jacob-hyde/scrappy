@@ -4,15 +4,20 @@ import Cache from "../Services/Cache";
 import Config from "../Services/Config";
 import ConsoleLogger from "../Services/Loggers/ConsoleLogger";
 
-module.exports = async (job: Job | SandboxedJob) => {
+const ProcessorSetup = async (): Promise<Scrappy> => {
   const cache = new Cache(new Config(), new ConsoleLogger());
-  const scrappySerialized = await cache.get("scrappy");
+  const scrappyDeserialized = await cache.get("scrappy");
 
-  if (scrappySerialized) {
-    Scrappy.deserialize(scrappySerialized);
-  } else {
-    Scrappy.initialize();
+  if (scrappyDeserialized) {
+    return Scrappy.deserialize(scrappyDeserialized);
   }
+  return Scrappy.initialize();
+};
+
+module.exports = async (job: Job | SandboxedJob) => {
+  const scrappy = await ProcessorSetup();
+
+  // console.log(scrappy.getQueue("test"));
 
   // Now you can interact with Scrappy as expected
 };

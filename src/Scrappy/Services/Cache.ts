@@ -1,5 +1,5 @@
 import Config from "./Config";
-import ILogger from "./Interfaces/ILogger";
+import ILogger from "./Interfaces/Logger";
 const redis = require("redis");
 
 export default class Cache {

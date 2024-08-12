@@ -1,8 +1,8 @@
 const puppeteer = require("puppeteer-extra");
 import { Browser as PBrowser } from "puppeteer";
-import BaseBrowser from "./BaseBrowser";
+import BrowserBase from "./BrowserBase";
 
-export default class Browser extends BaseBrowser {
+export default class Browser extends BrowserBase {
   protected instance!: PBrowser;
 
   public async launch(): Promise<void> {

@@ -1,4 +1,4 @@
-import ILogger from "../Interfaces/ILogger";
+import ILogger from "../Interfaces/Logger";
 
 export default class ConsoleLogger implements ILogger {
   log(message: string): void {
